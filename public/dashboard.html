@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owner dashboard</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 30px auto; padding: 0 16px; }
+  h1 { font-size: 1.4rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+  select { padding: 6px; border-radius: 6px; border: 1px solid #ccc; }
+  .status-booking_confirmed { color: #0a7a2f; }
+  .status-appointment_reminder { color: #a66a00; }
+  .status-booking_completed { color: #1b1b1b; }
+  .status-booking_cancelled { color: #b00020; }
+  #refresh { margin-top: 12px; padding: 8px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+  <h1>Bookings</h1>
+  <button id="refresh">Refresh</button>
+  <table>
+    <thead>
+      <tr><th>Customer</th><th>Phone</th><th>Time</th><th>Status</th><th>Change status</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    const STATUSES = ["booking_confirmed", "appointment_reminder", "booking_completed", "booking_cancelled"];
+    const rows = document.getElementById("rows");
+
+    async function load() {
+      const res = await fetch("/api/bookings");
+      const bookings = await res.json();
+      rows.innerHTML = "";
+
+      bookings.forEach((b) => {
+        const tr = document.createElement("tr");
+
+        const select = document.createElement("select");
+        STATUSES.forEach((s) => {
+          const opt = document.createElement("option");
+          opt.value = s;
+          opt.textContent = s;
+          if (s === b.status) opt.selected = true;
+          select.appendChild(opt);
+        });
+        select.addEventListener("change", async () => {
+          await fetch(`/api/bookings/${b._id}/status`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: select.value })
+          });
+          load();
+        });
+
+        tr.innerHTML = `
+          <td>${b.customer_name}</td>
+          <td>${b.customer_phone}</td>
+          <td>${b.appointment_time}</td>
+          <td class="status-${b.status}">${b.status}</td>
+        `;
+        const actionTd = document.createElement("td");
+        actionTd.appendChild(select);
+        tr.appendChild(actionTd);
+        rows.appendChild(tr);
+      });
+    }
+
+    document.getElementById("refresh").addEventListener("click", load);
+    load();
+  </script>
+</body>
+</html>
