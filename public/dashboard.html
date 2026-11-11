@@ -14,6 +14,9 @@
   .status-appointment_reminder { color: #a66a00; }
   .status-booking_completed { color: #1b1b1b; }
   .status-booking_cancelled { color: #b00020; }
+  .status-cancellation_requested { color: #b00020; font-weight: 700; }
+  .approve-btn { background: #0a7a2f; color: #fff; border: none; border-radius: 6px; padding: 6px 10px; margin-right: 6px; cursor: pointer; }
+  .reject-btn { background: #b00020; color: #fff; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
   #refresh { margin-top: 12px; padding: 8px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
 </style>
 </head>
@@ -38,24 +41,6 @@
 
       bookings.forEach((b) => {
         const tr = document.createElement("tr");
-
-        const select = document.createElement("select");
-        STATUSES.forEach((s) => {
-          const opt = document.createElement("option");
-          opt.value = s;
-          opt.textContent = s;
-          if (s === b.status) opt.selected = true;
-          select.appendChild(opt);
-        });
-        select.addEventListener("change", async () => {
-          await fetch(`/api/bookings/${b._id}/status`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: select.value })
-          });
-          load();
-        });
-
         tr.innerHTML = `
           <td>${b.customer_name}</td>
           <td>${b.customer_phone}</td>
@@ -63,7 +48,46 @@
           <td class="status-${b.status}">${b.status}</td>
         `;
         const actionTd = document.createElement("td");
-        actionTd.appendChild(select);
+
+        if (b.status === "cancellation_requested") {
+          const approveBtn = document.createElement("button");
+          approveBtn.className = "approve-btn";
+          approveBtn.textContent = "Approve cancellation";
+          approveBtn.addEventListener("click", async () => {
+            await fetch(`/api/bookings/${b._id}/approve-cancellation`, { method: "PATCH" });
+            load();
+          });
+
+          const rejectBtn = document.createElement("button");
+          rejectBtn.className = "reject-btn";
+          rejectBtn.textContent = "Keep booking";
+          rejectBtn.addEventListener("click", async () => {
+            await fetch(`/api/bookings/${b._id}/reject-cancellation`, { method: "PATCH" });
+            load();
+          });
+
+          actionTd.appendChild(approveBtn);
+          actionTd.appendChild(rejectBtn);
+        } else {
+          const select = document.createElement("select");
+          STATUSES.forEach((s) => {
+            const opt = document.createElement("option");
+            opt.value = s;
+            opt.textContent = s;
+            if (s === b.status) opt.selected = true;
+            select.appendChild(opt);
+          });
+          select.addEventListener("change", async () => {
+            await fetch(`/api/bookings/${b._id}/status`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: select.value })
+            });
+            load();
+          });
+          actionTd.appendChild(select);
+        }
+
         tr.appendChild(actionTd);
         rows.appendChild(tr);
       });

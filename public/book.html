@@ -29,6 +29,15 @@
   </form>
   <div id="msg"></div>
 
+  <hr style="margin-top:32px">
+
+  <h1>Need to cancel?</h1>
+  <label>Your WhatsApp number
+    <input type="tel" id="lookupPhone" placeholder="91XXXXXXXXXX">
+  </label>
+  <button type="button" id="findBtn">Find my booking</button>
+  <div id="lookupResults"></div>
+
   <script>
     const form = document.getElementById("bookingForm");
     const msg = document.getElementById("msg");
@@ -50,6 +59,52 @@
       } catch (err) {
         msg.textContent = "Could not book: " + err.message;
       }
+    });
+
+    const lookupPhone = document.getElementById("lookupPhone");
+    const findBtn = document.getElementById("findBtn");
+    const lookupResults = document.getElementById("lookupResults");
+
+    findBtn.addEventListener("click", async () => {
+      const phone = lookupPhone.value.trim();
+      if (!phone) return;
+      lookupResults.textContent = "Looking up...";
+
+      const res = await fetch(`/api/bookings/by-phone/${encodeURIComponent(phone)}`);
+      const bookings = await res.json();
+      lookupResults.innerHTML = "";
+
+      if (bookings.length === 0) {
+        lookupResults.textContent = "No active bookings found for that number.";
+        return;
+      }
+
+      bookings.forEach((b) => {
+        const row = document.createElement("div");
+        row.style.marginTop = "12px";
+        row.style.padding = "10px";
+        row.style.border = "1px solid #eee";
+        row.style.borderRadius = "6px";
+
+        if (b.status === "cancellation_requested") {
+          row.innerHTML = `<div>${b.appointment_time}</div><div>Cancellation requested — waiting for the business to confirm.</div>`;
+          lookupResults.appendChild(row);
+          return;
+        }
+
+        row.innerHTML = `<div>${b.appointment_time}</div>`;
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Request cancellation";
+        cancelBtn.style.marginTop = "8px";
+        cancelBtn.addEventListener("click", async () => {
+          cancelBtn.disabled = true;
+          cancelBtn.textContent = "Requesting...";
+          await fetch(`/api/bookings/${b._id}/request-cancellation`, { method: "POST" });
+          findBtn.click();
+        });
+        row.appendChild(cancelBtn);
+        lookupResults.appendChild(row);
+      });
     });
   </script>
 </body>

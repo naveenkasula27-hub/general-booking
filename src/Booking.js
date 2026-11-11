@@ -6,7 +6,7 @@ const bookingSchema = new mongoose.Schema({
   appointment_time: { type: String, required: true },
   status: {
     type: String,
-    enum: ["booking_confirmed", "appointment_reminder", "booking_completed", "booking_cancelled"],
+    enum: ["booking_confirmed", "appointment_reminder", "booking_completed", "booking_cancelled", "cancellation_requested"],
     default: "booking_confirmed"
   }
 }, { timestamps: true });

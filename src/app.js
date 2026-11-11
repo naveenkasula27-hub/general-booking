@@ -63,6 +63,75 @@ app.patch("/api/bookings/:id/status", async (req, res) => {
   }
 });
 
+// Customer looks up their own active bookings by phone (to request cancellation)
+app.get("/api/bookings/by-phone/:phone", async (req, res) => {
+  const bookings = await Booking.find({
+    customer_phone: req.params.phone,
+    status: { $in: ["booking_confirmed", "appointment_reminder", "cancellation_requested"] }
+  }).sort({ createdAt: -1 });
+  res.json(bookings);
+});
+
+// Customer requests cancellation -> owner is alerted to approve/reject, booking stays active until then
+app.post("/api/bookings/:id/request-cancellation", async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: "Booking not found" });
+    if (!["booking_confirmed", "appointment_reminder"].includes(booking.status)) {
+      return res.status(400).json({ error: "This booking can't be cancelled right now" });
+    }
+
+    booking.status = "cancellation_requested";
+    await booking.save();
+    await notifyEngine("cancellation_requested", booking);
+
+    res.json(booking);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not request cancellation" });
+  }
+});
+
+// Owner approves a pending cancellation request -> booking is cancelled, customer gets the confirmation
+app.patch("/api/bookings/:id/approve-cancellation", async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: "Booking not found" });
+    if (booking.status !== "cancellation_requested") {
+      return res.status(400).json({ error: "No pending cancellation request for this booking" });
+    }
+
+    booking.status = "booking_cancelled";
+    await booking.save();
+    await notifyEngine("booking_cancelled", booking);
+
+    res.json(booking);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not approve cancellation" });
+  }
+});
+
+// Owner rejects a pending cancellation request -> booking stands, customer is told it wasn't cancelled
+app.patch("/api/bookings/:id/reject-cancellation", async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: "Booking not found" });
+    if (booking.status !== "cancellation_requested") {
+      return res.status(400).json({ error: "No pending cancellation request for this booking" });
+    }
+
+    booking.status = "booking_confirmed";
+    await booking.save();
+    await notifyEngine("cancellation_rejected", booking);
+
+    res.json(booking);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not reject cancellation" });
+  }
+});
+
 const start = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);

@@ -1,0 +1,95 @@
+{
+  "name": "general-booking engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "engine-booking",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Booking Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "general-booking-engine"
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $json.event_type;\nconst biz = $json.business_name || 'Our Business';\nconst name = $json.customer_name;\nconst phone = $json.customer_phone;\nconst time = $json.appointment_time;\n\n// Each Meta-approved template has its own variable order/count\nconst templates = {\n  booking_confirmed: { name: 'apptbook_confirmed', params: [name, biz, time] },\n  appointment_reminder: { name: 'apptbook_reminder', params: [name, biz, time] },\n  booking_completed: { name: 'apptbook_completed', params: [name, biz] },\n  booking_cancelled: { name: 'apptbook_cancelled', params: [name, biz, time] },\n  cancellation_requested: { name: 'apptbook_cancel_request', params: [name, time] },\n  cancellation_rejected: { name: 'apptbook_cancel_declined', params: [name, biz, time] }\n};\n\nconst ownerSubjects = {\n  booking_confirmed: `New booking confirmed - ${name}`,\n  appointment_reminder: `Reminder due - ${name}`,\n  booking_completed: `Booking completed - ${name}`,\n  booking_cancelled: `Booking cancelled - ${name}`,\n  cancellation_requested: `ACTION NEEDED: ${name} wants to cancel - approve or reject in the dashboard`,\n  cancellation_rejected: `Cancellation rejected - ${name} stays booked`\n};\n\nconst tpl = templates[event] || templates.booking_confirmed;\n\nreturn [{\n  json: {\n    ...$json,\n    whatsapp_template: tpl.name,\n    whatsapp_params: tpl.params,\n    owner_subject: ownerSubjects[event] || `Booking update - ${name}`,\n    owner_body: `Event: ${event}\\nCustomer: ${name}\\nPhone: ${phone}\\nAppointment: ${time}`\n  }\n}];"
+      },
+      "id": "build-messages",
+      "name": "Build Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/PUT_WHATSAPP_PHONE_NUMBER_ID_HERE/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  messaging_product: \"whatsapp\",\n  to: $json.customer_phone,\n  type: \"template\",\n  template: {\n    name: $json.whatsapp_template,\n    language: { code: \"en_US\" },\n    components: [\n      {\n        type: \"body\",\n        parameters: $json.whatsapp_params.map(p => ({ type: \"text\", text: String(p) }))\n      }\n    ]\n  }\n} }}",
+        "options": {}
+      },
+      "id": "whatsapp-send",
+      "name": "WhatsApp Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 200],
+      "credentials": {
+        "whatsAppApi": {
+          "id": "",
+          "name": "WhatsApp Cloud API account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.owner_email }}",
+        "subject": "={{ $json.owner_subject }}",
+        "message": "={{ $json.owner_body }}",
+        "options": {}
+      },
+      "id": "gmail-send",
+      "name": "Email Owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [700, 400],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Booking Webhook": {
+      "main": [
+        [
+          { "node": "Build Messages", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Build Messages": {
+      "main": [
+        [
+          { "node": "WhatsApp Customer", "type": "main", "index": 0 },
+          { "node": "Email Owner", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
