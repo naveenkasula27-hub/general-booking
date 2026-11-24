@@ -3,32 +3,163 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Owner dashboard</title>
+<title>Owner dashboard | UnityWebWorks</title>
+<link rel="icon" href="/images/uww-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 30px auto; padding: 0 16px; }
-  h1 { font-size: 1.4rem; }
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-  select { padding: 6px; border-radius: 6px; border: 1px solid #ccc; }
-  .status-booking_confirmed { color: #0a7a2f; }
-  .status-appointment_reminder { color: #a66a00; }
-  .status-booking_completed { color: #1b1b1b; }
-  .status-booking_cancelled { color: #b00020; }
-  .status-cancellation_requested { color: #b00020; font-weight: 700; }
-  .approve-btn { background: #0a7a2f; color: #fff; border: none; border-radius: 6px; padding: 6px 10px; margin-right: 6px; cursor: pointer; }
-  .reject-btn { background: #b00020; color: #fff; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
-  #refresh { margin-top: 12px; padding: 8px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  :root {
+    --navy: #14213D;
+    --orange: #FF6A1F;
+    --amber: #FFA55C;
+    --slate: #6B7280;
+    --pale-orange: #FFE4D1;
+    --cloud: #F8F8F8;
+    --white: #FFFFFF;
+    --green: #16A34A;
+    --red: #DC2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    background: var(--cloud);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+  .page { max-width: 1040px; margin: 0 auto; padding: 24px 20px 60px; }
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .topbar img { height: 26px; width: auto; }
+  .topbar h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin: 0 0 0 4px;
+    color: var(--navy);
+  }
+  .topbar .spacer { flex: 1; }
+  #refresh {
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: 1.5px solid var(--navy);
+    background: var(--white);
+    color: var(--navy);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  #refresh:hover { background: var(--navy); color: var(--white); }
+  .table-card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(20, 33, 61, 0.08), 0 8px 24px rgba(20, 33, 61, 0.06);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    padding: 14px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--slate);
+    background: var(--cloud);
+    border-bottom: 1.5px solid #EEF0F3;
+  }
+  tbody td {
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    border-bottom: 1px solid #F1F2F5;
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #FBFBFC; }
+  .pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+  }
+  .pill-booking_confirmed { background: #DCFCE7; color: var(--green); }
+  .pill-appointment_reminder { background: #FEF3C7; color: #B45309; }
+  .pill-booking_completed { background: #E5E7EB; color: var(--navy); }
+  .pill-booking_cancelled { background: #FEE2E2; color: var(--red); }
+  .pill-cancellation_requested { background: var(--pale-orange); color: #B23E06; }
+  select {
+    padding: 7px 10px;
+    border-radius: 7px;
+    border: 1.5px solid #E5E7EB;
+    background: var(--white);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.85rem;
+    color: var(--navy);
+  }
+  .approve-btn, .reject-btn {
+    border: none;
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    cursor: pointer;
+    margin-right: 6px;
+  }
+  .approve-btn { background: var(--green); color: var(--white); }
+  .approve-btn:hover { background: #15803D; }
+  .reject-btn { background: var(--pale-orange); color: #B23E06; }
+  .reject-btn:hover { background: #FFD4B3; }
+  .empty-state {
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--slate);
+    font-size: 0.9rem;
+  }
+  footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 0.75rem;
+    color: var(--slate);
+  }
+  footer a { color: var(--orange); text-decoration: none; font-weight: 600; }
+  @media (max-width: 720px) {
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+  }
 </style>
 </head>
 <body>
-  <h1>Bookings</h1>
-  <button id="refresh">Refresh</button>
-  <table>
-    <thead>
-      <tr><th>Customer</th><th>Phone</th><th>Time</th><th>Status</th><th>Change status</th></tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
+  <div class="page">
+    <div class="topbar">
+      <img src="/images/uww-logo-header.png" alt="UnityWebWorks">
+      <h1>&middot; Owner dashboard</h1>
+      <div class="spacer"></div>
+      <button id="refresh">Refresh</button>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th>Customer</th><th>Phone</th><th>Time</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <footer>
+      Powered by <a href="https://unitywebworks.com" target="_blank" rel="noopener">UnityWebWorks</a>
+    </footer>
+  </div>
 
   <script>
     const STATUSES = ["booking_confirmed", "appointment_reminder", "booking_completed", "booking_cancelled"];
@@ -39,20 +170,25 @@
       const bookings = await res.json();
       rows.innerHTML = "";
 
+      if (bookings.length === 0) {
+        rows.innerHTML = '<tr><td colspan="5" class="empty-state">No bookings yet.</td></tr>';
+        return;
+      }
+
       bookings.forEach((b) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${b.customer_name}</td>
           <td>${b.customer_phone}</td>
           <td>${b.appointment_time}</td>
-          <td class="status-${b.status}">${b.status}</td>
+          <td><span class="pill pill-${b.status}">${b.status.replace(/_/g, " ")}</span></td>
         `;
         const actionTd = document.createElement("td");
 
         if (b.status === "cancellation_requested") {
           const approveBtn = document.createElement("button");
           approveBtn.className = "approve-btn";
-          approveBtn.textContent = "Approve cancellation";
+          approveBtn.textContent = "Approve";
           approveBtn.addEventListener("click", async () => {
             await fetch(`/api/bookings/${b._id}/approve-cancellation`, { method: "PATCH" });
             load();
@@ -73,7 +209,7 @@
           STATUSES.forEach((s) => {
             const opt = document.createElement("option");
             opt.value = s;
-            opt.textContent = s;
+            opt.textContent = s.replace(/_/g, " ");
             if (s === b.status) opt.selected = true;
             select.appendChild(opt);
           });

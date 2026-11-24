@@ -3,40 +3,211 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Book an appointment</title>
+<title>Book an appointment | UnityWebWorks</title>
+<meta name="description" content="Book your appointment in seconds and get an instant WhatsApp confirmation.">
+<link rel="icon" href="/images/uww-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 420px; margin: 40px auto; padding: 0 16px; }
-  h1 { font-size: 1.4rem; }
-  label { display: block; margin-top: 16px; font-weight: 600; }
-  input { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
-  button { margin-top: 24px; width: 100%; padding: 12px; background: #1b1b1b; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
-  #msg { margin-top: 16px; font-weight: 600; }
+  :root {
+    --navy: #14213D;
+    --orange: #FF6A1F;
+    --amber: #FFA55C;
+    --slate: #6B7280;
+    --pale-orange: #FFE4D1;
+    --cloud: #F8F8F8;
+    --white: #FFFFFF;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    background: var(--cloud);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+  .brand {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-bottom: 28px;
+  }
+  .brand img { height: 26px; width: auto; max-width: 100%; }
+  .brand .tag {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--slate);
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+  }
+  @media (max-width: 420px) {
+    .brand .tag {
+      margin-left: 0;
+      text-align: left;
+      flex-basis: 100%;
+    }
+  }
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    box-shadow: 0 1px 3px rgba(20, 33, 61, 0.08), 0 8px 24px rgba(20, 33, 61, 0.06);
+  }
+  .card + .card { margin-top: 20px; }
+  h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin: 0 0 4px;
+    color: var(--navy);
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    color: var(--slate);
+    margin: 0 0 20px;
+  }
+  label {
+    display: block;
+    margin-top: 16px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--navy);
+  }
+  label:first-of-type { margin-top: 0; }
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 6px;
+    box-sizing: border-box;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.95rem;
+    color: var(--navy);
+    background: var(--cloud);
+    transition: border-color 0.15s ease;
+  }
+  input::placeholder { color: #B0B6C0; }
+  input:focus {
+    outline: none;
+    border-color: var(--orange);
+    background: var(--white);
+  }
+  button {
+    margin-top: 22px;
+    width: 100%;
+    padding: 13px;
+    background: var(--orange);
+    color: var(--navy);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  button:hover { background: #E85E19; }
+  button:active { transform: scale(0.99); }
+  button:disabled { opacity: 0.6; cursor: default; }
+  button.secondary {
+    background: var(--navy);
+    color: var(--white);
+  }
+  button.secondary:hover { background: #0E1830; }
+  #msg {
+    margin-top: 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .result-row {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1.5px solid #EEF0F3;
+    border-radius: 8px;
+    background: var(--cloud);
+  }
+  .result-row .time {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--navy);
+  }
+  .result-row .pending {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: var(--orange);
+    font-weight: 600;
+  }
+  .result-row button {
+    margin-top: 10px;
+    padding: 9px;
+    font-size: 0.85rem;
+    background: var(--pale-orange);
+    color: #B23E06;
+  }
+  .result-row button:hover { background: #FFD4B3; }
+  footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 0.75rem;
+    color: var(--slate);
+  }
+  footer a { color: var(--orange); text-decoration: none; font-weight: 600; }
 </style>
 </head>
 <body>
-  <h1>Book an appointment</h1>
-  <form id="bookingForm">
-    <label>Your name
-      <input type="text" name="customer_name" required>
-    </label>
-    <label>WhatsApp number (with country code)
-      <input type="tel" name="customer_phone" placeholder="91XXXXXXXXXX" required>
-    </label>
-    <label>Preferred time
-      <input type="text" name="appointment_time" placeholder="e.g. Tomorrow 5 PM" required>
-    </label>
-    <button type="submit">Book now</button>
-  </form>
-  <div id="msg"></div>
+  <div class="page">
+    <div class="brand">
+      <img src="/images/uww-logo-header.png" alt="UnityWebWorks" style="height:26px; width:auto; margin: 0 auto 0 0; display:block;">
+      <span class="tag">BUILD&nbsp;&middot;&nbsp;GROW&nbsp;&middot;&nbsp;AUTOMATE</span>
+    </div>
 
-  <hr style="margin-top:32px">
+    <div class="card">
+      <h1>Book your appointment</h1>
+      <p class="subtitle">Pick a time. You'll get a WhatsApp confirmation right away.</p>
+      <form id="bookingForm">
+        <label>Your name
+          <input type="text" name="customer_name" required>
+        </label>
+        <label>WhatsApp number (with country code)
+          <input type="tel" name="customer_phone" placeholder="91XXXXXXXXXX" required>
+        </label>
+        <label>Preferred time
+          <input type="text" name="appointment_time" placeholder="e.g. Tomorrow 5 PM" required>
+        </label>
+        <button type="submit">Book now</button>
+      </form>
+      <div id="msg"></div>
+    </div>
 
-  <h1>Need to cancel?</h1>
-  <label>Your WhatsApp number
-    <input type="tel" id="lookupPhone" placeholder="91XXXXXXXXXX">
-  </label>
-  <button type="button" id="findBtn">Find my booking</button>
-  <div id="lookupResults"></div>
+    <div class="card">
+      <h1>Need to cancel?</h1>
+      <p class="subtitle">Find your booking and request a cancellation.</p>
+      <label>Your WhatsApp number
+        <input type="tel" id="lookupPhone" placeholder="91XXXXXXXXXX">
+      </label>
+      <button type="button" id="findBtn" class="secondary">Find my booking</button>
+      <div id="lookupResults"></div>
+    </div>
+
+    <footer>
+      Powered by <a href="https://unitywebworks.com" target="_blank" rel="noopener">UnityWebWorks</a>
+    </footer>
+  </div>
 
   <script>
     const form = document.getElementById("bookingForm");
@@ -68,34 +239,30 @@
     findBtn.addEventListener("click", async () => {
       const phone = lookupPhone.value.trim();
       if (!phone) return;
-      lookupResults.textContent = "Looking up...";
+      lookupResults.innerHTML = '<div class="result-row">Looking up...</div>';
 
       const res = await fetch(`/api/bookings/by-phone/${encodeURIComponent(phone)}`);
       const bookings = await res.json();
       lookupResults.innerHTML = "";
 
       if (bookings.length === 0) {
-        lookupResults.textContent = "No active bookings found for that number.";
+        lookupResults.innerHTML = '<div class="result-row">No active bookings found for that number.</div>';
         return;
       }
 
       bookings.forEach((b) => {
         const row = document.createElement("div");
-        row.style.marginTop = "12px";
-        row.style.padding = "10px";
-        row.style.border = "1px solid #eee";
-        row.style.borderRadius = "6px";
+        row.className = "result-row";
 
         if (b.status === "cancellation_requested") {
-          row.innerHTML = `<div>${b.appointment_time}</div><div>Cancellation requested — waiting for the business to confirm.</div>`;
+          row.innerHTML = `<div class="time">${b.appointment_time}</div><div class="pending">Cancellation requested — waiting for the business to confirm.</div>`;
           lookupResults.appendChild(row);
           return;
         }
 
-        row.innerHTML = `<div>${b.appointment_time}</div>`;
+        row.innerHTML = `<div class="time">${b.appointment_time}</div>`;
         const cancelBtn = document.createElement("button");
         cancelBtn.textContent = "Request cancellation";
-        cancelBtn.style.marginTop = "8px";
         cancelBtn.addEventListener("click", async () => {
           cancelBtn.disabled = true;
           cancelBtn.textContent = "Requesting...";

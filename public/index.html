@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhatsApp Booking System for Salons & Clinics | UnityWebWorks</title>
+<meta name="description" content="A booking page your customers can use in seconds, with instant WhatsApp confirmations, reminders and a simple owner dashboard. Built by UnityWebWorks.">
+<link rel="icon" href="/images/uww-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #14213D;
+    --orange: #FF6A1F;
+    --amber: #FFA55C;
+    --slate: #6B7280;
+    --pale-orange: #FFE4D1;
+    --cloud: #F8F8F8;
+    --white: #FFFFFF;
+    --green: #16A34A;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    background: var(--white);
+    color: var(--navy);
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3 { font-family: 'Poppins', sans-serif; margin: 0; }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #EEF0F3;
+  }
+  nav .wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+  }
+  nav img { height: 24px; width: auto; }
+  nav .links {
+    display: flex;
+    gap: 22px;
+    margin-left: auto;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  nav .links a { text-decoration: none; color: var(--navy); }
+  nav .links a:hover { color: var(--orange); }
+  nav .cta {
+    background: var(--orange);
+    color: var(--navy);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  nav .cta:hover { background: #E85E19; }
+  @media (max-width: 720px) {
+    nav .links { display: none; }
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(180deg, var(--cloud) 0%, var(--white) 100%);
+    padding: 64px 0 56px;
+    text-align: center;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--orange);
+    background: var(--pale-orange);
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 2.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    max-width: 680px;
+    margin: 0 auto 16px;
+  }
+  .hero h1 span { color: var(--orange); }
+  .hero p.lede {
+    max-width: 560px;
+    margin: 0 auto 28px;
+    font-size: 1.05rem;
+    color: var(--slate);
+    line-height: 1.6;
+  }
+  .hero-ctas { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 13px 24px;
+    border-radius: 9px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+    transition: transform 0.1s ease, background 0.15s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--orange); color: var(--navy); }
+  .btn-primary:hover { background: #E85E19; }
+  .btn-secondary { background: var(--navy); color: var(--white); }
+  .btn-secondary:hover { background: #0E1830; }
+
+  /* SECTIONS */
+  section { padding: 64px 0; }
+  .section-head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
+  .section-tag {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .section-head h2 { font-size: 1.7rem; font-weight: 700; margin-bottom: 10px; }
+  .section-head p { color: var(--slate); font-size: 0.98rem; line-height: 1.6; margin: 0; }
+
+  /* ABOUT */
+  .about { background: var(--cloud); }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  .about-copy p { color: var(--navy); line-height: 1.7; font-size: 0.98rem; margin: 0 0 16px; }
+  .about-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .stat {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 18px 14px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(20,33,61,0.06);
+  }
+  .stat .num { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--orange); }
+  .stat .label { font-size: 0.72rem; color: var(--slate); margin-top: 4px; }
+  @media (max-width: 720px) {
+    .about-grid { grid-template-columns: 1fr; }
+  }
+
+  /* SERVICES */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .service-card {
+    background: var(--white);
+    border: 1.5px solid #EEF0F3;
+    border-radius: 14px;
+    padding: 28px 22px;
+  }
+  .service-card .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--pale-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+  .service-card h3 { font-size: 1.02rem; font-weight: 700; margin-bottom: 8px; }
+  .service-card p { font-size: 0.88rem; color: var(--slate); line-height: 1.6; margin: 0; }
+  @media (max-width: 860px) {
+    .services-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .services-grid { grid-template-columns: 1fr; }
+  }
+
+  /* HOW IT WORKS */
+  .how { background: var(--navy); color: var(--white); }
+  .how .section-head p { color: #AEB6C6; }
+  .how .section-head h2 { color: var(--white); }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    counter-reset: step;
+  }
+  .step {
+    position: relative;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 26px 20px 22px;
+  }
+  .step .step-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: var(--navy);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .step h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: var(--white); }
+  .step p { font-size: 0.85rem; color: #AEB6C6; line-height: 1.55; margin: 0; }
+  @media (max-width: 860px) {
+    .steps { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .steps { grid-template-columns: 1fr; }
+  }
+
+  /* CTA BAND */
+  .cta-band {
+    background: var(--pale-orange);
+    border-radius: 18px;
+    padding: 44px 32px;
+    text-align: center;
+    margin: 0 20px;
+  }
+  .cta-band h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; }
+  .cta-band p { color: #8A4A1E; margin: 0 0 24px; font-size: 0.95rem; }
+
+  /* FOOTER */
+  footer { background: var(--navy); color: #AEB6C6; padding: 48px 0 28px; }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .footer-brand img { height: 24px; margin-bottom: 12px; }
+  .footer-brand p { font-size: 0.85rem; line-height: 1.6; color: #AEB6C6; max-width: 280px; margin: 0; }
+  .footer-col h4 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 14px;
+  }
+  .footer-col a {
+    display: block;
+    font-size: 0.86rem;
+    color: #AEB6C6;
+    text-decoration: none;
+    margin-bottom: 10px;
+  }
+  .footer-col a:hover { color: var(--orange); }
+  .footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 20px;
+    font-size: 0.78rem;
+    color: #7C8599;
+  }
+  @media (max-width: 720px) {
+    .footer-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <nav>
+    <div class="wrap">
+      <img src="/images/uww-logo-header.png" alt="UnityWebWorks">
+      <div class="links">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#how-it-works">How it works</a>
+      </div>
+      <a class="cta" href="/book.html">Try the demo</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="home">
+    <div class="wrap">
+      <span class="eyebrow">For salons &amp; clinics</span>
+      <h1>Bookings that confirm themselves on <span>WhatsApp</span></h1>
+      <p class="lede">A booking page your customers fill in seconds, an instant WhatsApp confirmation, a reminder before the visit, and one dashboard where you run it all. No app. No login for them.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="/book.html">Try the booking page</a>
+        <a class="btn btn-secondary" href="/dashboard.html">View owner dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="about" id="about">
+    <div class="wrap about-grid">
+      <div class="about-copy">
+        <span class="section-tag">About this system</span>
+        <h2 style="font-size:1.6rem; margin-bottom:14px;">Built for owners who don't have time to chase bookings</h2>
+        <p>Every missed call is a lost customer. This system replaces that with a simple page your customers open from a WhatsApp message, Instagram bio or QR code, book in under a minute, and get confirmed instantly, no app, no account.</p>
+        <p>Built by <strong>UnityWebWorks</strong>, run on your own WhatsApp number, and set up around how your business actually works, not a generic template.</p>
+        <div class="about-stats">
+          <div class="stat"><div class="num">&lt;60s</div><div class="label">to book</div></div>
+          <div class="stat"><div class="num">0</div><div class="label">apps to install</div></div>
+          <div class="stat"><div class="num">1</div><div class="label">dashboard, all bookings</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="service-card" style="border-color:var(--pale-orange);">
+          <div class="icon">💬</div>
+          <h3>Real WhatsApp, not SMS</h3>
+          <p>Confirmations, reminders and cancellation updates land in the same app your customers already check every day.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag">What's included</span>
+        <h2>Four things, working together</h2>
+        <p>Everything a salon or clinic needs to stop losing bookings to missed calls and forgotten follow-ups.</p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="icon">📅</div>
+          <h3>Online booking page</h3>
+          <p>A clean page customers open on their phone. Name, number, preferred time &mdash; done.</p>
+        </div>
+        <div class="service-card">
+          <div class="icon">✅</div>
+          <h3>Instant WhatsApp confirmation</h3>
+          <p>The moment someone books, they get a WhatsApp message confirming the time. No waiting on you.</p>
+        </div>
+        <div class="service-card">
+          <div class="icon">🔔</div>
+          <h3>Automatic reminders</h3>
+          <p>Send a reminder before the appointment with one click from your dashboard. Fewer no-shows.</p>
+        </div>
+        <div class="service-card">
+          <div class="icon">🙅</div>
+          <h3>Cancellation approval flow</h3>
+          <p>Customers can request to cancel, but nothing is final until you approve it. You stay in control.</p>
+        </div>
+        <div class="service-card">
+          <div class="icon">📧</div>
+          <h3>Owner email alerts</h3>
+          <p>Every new booking, reminder and cancellation request also lands in your inbox automatically.</p>
+        </div>
+        <div class="service-card">
+          <div class="icon">📊</div>
+          <h3>One simple dashboard</h3>
+          <p>See every booking, change its status, or approve/reject a cancellation &mdash; all from one screen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how" id="how-it-works">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag" style="color:var(--amber);">The process</span>
+        <h2>How it works, start to finish</h2>
+        <p>Four steps, fully automatic once it's set up.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Customer books</h3>
+          <p>They open your booking page, enter their name, WhatsApp number and preferred time.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Instant confirmation</h3>
+          <p>A WhatsApp message confirms their appointment within seconds. You get an email too.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Reminder before the visit</h3>
+          <p>You send a reminder from the dashboard, or it goes out automatically closer to the date.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>You stay in control</h3>
+          <p>If a customer wants to cancel, you approve or reject it, and they get the final word by WhatsApp.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cta-band">
+      <h2>See it working, no setup needed</h2>
+      <p>Open the live demo and book a test appointment yourself.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="/book.html">Try the booking page</a>
+        <a class="btn btn-secondary" href="/dashboard.html">View owner dashboard</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="/images/uww-logo-header-white.png" alt="UnityWebWorks">
+          <p>Websites, apps, ads and automation for local businesses, built end to end by one founder. Medak, Hyderabad, Telangana &amp; worldwide.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#about">About</a>
+          <a href="#services">Services</a>
+          <a href="#how-it-works">How it works</a>
+          <a href="/book.html">Try the demo</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <a href="https://wa.me/917729069137" target="_blank" rel="noopener">WhatsApp: +91 77290 69137</a>
+          <a href="mailto:naveen@unitywebworks.com">naveen@unitywebworks.com</a>
+          <a href="https://unitywebworks.com" target="_blank" rel="noopener">unitywebworks.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 UnityWebWorks. Built by Naveen Kasula.</span>
+        <span>BUILD &middot; GROW &middot; AUTOMATE</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
