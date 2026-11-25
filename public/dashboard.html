@@ -57,6 +57,22 @@
     cursor: pointer;
   }
   #refresh:hover { background: var(--navy); color: var(--white); }
+  .day-nav-btn {
+    width: 34px; height: 34px; border-radius: 7px; border: 1.5px solid #E5E7EB;
+    background: var(--white); color: var(--navy); font-family: 'Poppins', sans-serif;
+    font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  }
+  .day-nav-btn:hover { background: var(--cloud); }
+  .day-slot {
+    display: flex; align-items: center; gap: 12px; padding: 9px 14px;
+    font-size: 0.85rem; background: var(--white); border-bottom: 1px solid #F1F2F5;
+  }
+  .day-slot:last-child { border-bottom: none; }
+  .day-slot .slot-time { width: 70px; flex-shrink: 0; font-family: 'Poppins', sans-serif; font-weight: 600; color: var(--slate); }
+  .day-slot.booked { background: var(--pale-orange); }
+  .day-slot .slot-info strong { color: var(--navy); }
+  .day-slot .slot-info span { color: var(--slate); font-size: 0.78rem; }
+  .day-slot .slot-free { color: #C7CCD4; }
   #logout {
     padding: 9px 16px;
     border-radius: 8px;
@@ -161,6 +177,19 @@
       <button id="logout">Log out</button>
     </div>
 
+    <div class="table-card" style="margin-bottom:20px; padding:20px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <h2 style="font-family:'Poppins',sans-serif; font-size:1rem; margin:0;">Day schedule</h2>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <button id="dayPrev" class="day-nav-btn">&larr;</button>
+          <input type="date" id="dayDate" style="padding:7px 10px; border-radius:7px; border:1.5px solid #E5E7EB; font-family:'Lato',sans-serif;">
+          <button id="dayNext" class="day-nav-btn">&rarr;</button>
+          <button id="dayToday" class="day-nav-btn" style="width:auto; padding:0 12px;">Today</button>
+        </div>
+      </div>
+      <div id="daySchedule" style="display:flex; flex-direction:column; gap:1px; max-height:360px; overflow-y:auto; border:1px solid #EEF0F3; border-radius:8px;"></div>
+    </div>
+
     <div class="table-card">
       <table>
         <thead>
@@ -205,6 +234,53 @@
     document.getElementById("logout").addEventListener("click", async () => {
       await fetch("/api/logout", { method: "POST" });
       window.location.href = "/login.html";
+    });
+
+    // ---------- Day schedule ----------
+    const dayDate = document.getElementById("dayDate");
+    const daySchedule = document.getElementById("daySchedule");
+
+    function toDateStr(d) { return d.toISOString().slice(0, 10); }
+    dayDate.value = toDateStr(new Date());
+
+    async function loadDaySchedule() {
+      daySchedule.innerHTML = '<div class="day-slot">Loading...</div>';
+      const res = await fetch(`/api/dashboard/day-schedule?date=${encodeURIComponent(dayDate.value)}`);
+      if (res.status === 401) { window.location.href = "/login.html"; return; }
+      const slots = await res.json();
+      daySchedule.innerHTML = "";
+
+      if (!Array.isArray(slots) || slots.length === 0) {
+        daySchedule.innerHTML = '<div class="day-slot">No working hours set for this business.</div>';
+        return;
+      }
+
+      slots.forEach((slot) => {
+        const row = document.createElement("div");
+        row.className = "day-slot" + (slot.bookings.length > 0 ? " booked" : "");
+        if (slot.bookings.length === 0) {
+          row.innerHTML = `<span class="slot-time">${slot.time12}</span><span class="slot-free">&mdash; free &mdash;</span>`;
+        } else {
+          const info = slot.bookings.map((b) =>
+            `<div class="slot-info"><strong>${b.customer_name}</strong>${b.service_name ? ` &middot; ${b.service_name}` : ""} <span>${b.customer_phone}</span></div>`
+          ).join("");
+          row.innerHTML = `<span class="slot-time">${slot.time12}</span>${info}`;
+        }
+        daySchedule.appendChild(row);
+      });
+    }
+
+    dayDate.addEventListener("change", loadDaySchedule);
+    document.getElementById("dayPrev").addEventListener("click", () => {
+      const d = new Date(dayDate.value); d.setDate(d.getDate() - 1);
+      dayDate.value = toDateStr(d); loadDaySchedule();
+    });
+    document.getElementById("dayNext").addEventListener("click", () => {
+      const d = new Date(dayDate.value); d.setDate(d.getDate() + 1);
+      dayDate.value = toDateStr(d); loadDaySchedule();
+    });
+    document.getElementById("dayToday").addEventListener("click", () => {
+      dayDate.value = toDateStr(new Date()); loadDaySchedule();
     });
 
     const servicesList = document.getElementById("servicesList");
@@ -320,7 +396,7 @@
     }
 
     document.getElementById("refresh").addEventListener("click", load);
-    checkAuth().then((ok) => { if (ok) { load(); loadServices(); } });
+    checkAuth().then((ok) => { if (ok) { load(); loadServices(); loadDaySchedule(); } });
   </script>
 </body>
 </html>

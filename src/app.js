@@ -209,6 +209,35 @@ app.post("/api/:slug/bookings/:id/request-cancellation", async (req, res) => {
 
 // ---------- Owner-only dashboard routes (login required) ----------
 
+// Day schedule: every working-hour slot for that date, with whatever booking sits in it (if any).
+app.get("/api/dashboard/day-schedule", requireAuth, async (req, res) => {
+  const business = await Business.findById(req.businessId);
+  if (!business) return res.status(401).json({ error: "Not logged in" });
+
+  const { date } = req.query;
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ error: "date is required, format YYYY-MM-DD" });
+  }
+
+  const slots = generateSlotsForDate(business, date);
+  const dayStart = combineDateTime(date, "00:00");
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+
+  const bookings = await Booking.find({
+    business: business._id,
+    appointment_at: { $gte: dayStart, $lt: dayEnd },
+    status: { $ne: "booking_cancelled" }
+  });
+
+  const results = slots.map((slot) => {
+    const at = combineDateTime(date, slot.time);
+    const matches = bookings.filter((b) => b.appointment_at && b.appointment_at.getTime() === at.getTime());
+    return { time: slot.time, time12: slot.time12, bookings: matches };
+  });
+
+  res.json(results);
+});
+
 app.get("/api/dashboard/services", requireAuth, async (req, res) => {
   const business = await Business.findById(req.businessId);
   if (!business) return res.status(401).json({ error: "Not logged in" });
