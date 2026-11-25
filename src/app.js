@@ -102,12 +102,12 @@ app.post("/api/:slug/bookings", async (req, res) => {
     const business = await Business.findOne({ slug: req.params.slug });
     if (!business) return res.status(404).json({ error: "No business found for that link" });
 
-    const { customer_name, customer_phone, appointment_time } = req.body;
+    const { customer_name, customer_phone, customer_email, appointment_time } = req.body;
     if (!customer_name || !customer_phone || !appointment_time) {
       return res.status(400).json({ error: "customer_name, customer_phone and appointment_time are required" });
     }
 
-    const booking = await Booking.create({ business: business._id, customer_name, customer_phone, appointment_time });
+    const booking = await Booking.create({ business: business._id, customer_name, customer_phone, customer_email, appointment_time });
     await notifyEngine("booking_confirmed", booking, business);
 
     res.status(201).json(booking);

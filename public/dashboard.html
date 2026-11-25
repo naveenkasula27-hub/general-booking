@@ -214,7 +214,7 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${b.customer_name}</td>
-          <td>${b.customer_phone}</td>
+          <td>${b.customer_phone}${b.customer_email ? `<br><span style="color:var(--slate); font-size:0.78rem;">${b.customer_email}</span>` : ""}</td>
           <td>${b.appointment_time}</td>
           <td><span class="pill pill-${b.status}">${b.status.replace(/_/g, " ")}</span></td>
         `;

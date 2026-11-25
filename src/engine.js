@@ -14,6 +14,7 @@ export async function notifyEngine(eventType, booking, business) {
     business_name: business?.business_name || process.env.BUSINESS_NAME,
     customer_name: booking.customer_name,
     customer_phone: booking.customer_phone,
+    customer_email: booking.customer_email || undefined,
     appointment_time: booking.appointment_time,
     owner_email: business?.owner_email || process.env.OWNER_EMAIL || undefined,
     owner_phone: business?.owner_phone || process.env.OWNER_PHONE || undefined

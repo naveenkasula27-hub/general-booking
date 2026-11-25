@@ -4,6 +4,7 @@ const bookingSchema = new mongoose.Schema({
   business: { type: mongoose.Schema.Types.ObjectId, ref: "Business", required: true, index: true },
   customer_name: { type: String, required: true },
   customer_phone: { type: String, required: true },
+  customer_email: { type: String, default: "" },
   appointment_time: { type: String, required: true },
   status: {
     type: String,
