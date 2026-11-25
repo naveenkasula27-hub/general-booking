@@ -18,7 +18,8 @@ const businessSchema = new mongoose.Schema({
   slot_duration_minutes: { type: Number, default: 30 },
   working_hours_start: { type: String, default: "09:00" }, // "HH:MM", 24h
   working_hours_end: { type: String, default: "18:00" },
-  slot_capacity: { type: Number, default: 1 } // max bookings allowed per slot
+  slot_capacity: { type: Number, default: 1 }, // max bookings allowed per slot
+  reminder_hours_before: { type: Number, default: 2 } // send the auto-reminder this many hours before the appointment
 }, { timestamps: true });
 
 export default mongoose.model("Business", businessSchema);

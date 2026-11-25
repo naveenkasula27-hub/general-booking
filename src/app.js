@@ -10,6 +10,7 @@ import Business from "./Business.js";
 import { notifyEngine } from "./engine.js";
 import { hashPassword, comparePassword, signBusinessToken, setSessionCookie, clearSessionCookie, requireAuth } from "./auth.js";
 import { generateSlotsForDate, combineDateTime, formatDisplayTime } from "./slots.js";
+import { startReminderScheduler } from "./reminders.js";
 
 // This sandbox doesn't hand Node's resolver the system DNS servers it needs
 // for mongodb+srv:// SRV lookups, even though the OS resolver works fine.
@@ -301,6 +302,8 @@ const start = async () => {
 
     const port = process.env.PORT || 8001;
     app.listen(port, () => console.log(`general-booking running on port ${port}`));
+
+    startReminderScheduler();
   } catch (err) {
     console.error("DB connection failed:", err);
   }
