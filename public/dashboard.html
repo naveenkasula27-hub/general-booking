@@ -170,6 +170,17 @@
       </table>
     </div>
 
+    <div class="table-card" style="margin-top:20px; padding:20px;">
+      <h2 style="font-family:'Poppins',sans-serif; font-size:1rem; margin:0 0 4px;">Services</h2>
+      <p style="font-size:0.82rem; color:var(--slate); margin:0 0 14px;">Add the services customers can choose when booking. Leave empty to hide the service picker on your booking page.</p>
+      <div id="servicesList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+      <form id="serviceForm" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input type="text" id="serviceName" placeholder="Service name, e.g. Haircut" required style="flex:1; min-width:160px; padding:9px 12px; border-radius:7px; border:1.5px solid #E5E7EB; font-family:'Lato',sans-serif;">
+        <input type="text" id="servicePrice" placeholder="Price (optional), e.g. ₹500" style="flex:1; min-width:140px; padding:9px 12px; border-radius:7px; border:1.5px solid #E5E7EB; font-family:'Lato',sans-serif;">
+        <button type="submit" style="padding:9px 18px; border-radius:7px; border:none; background:var(--orange); color:var(--navy); font-family:'Poppins',sans-serif; font-weight:600; font-size:0.85rem; cursor:pointer;">Add</button>
+      </form>
+    </div>
+
     <footer>
       Powered by <a href="https://unitywebworks.com" target="_blank" rel="noopener">UnityWebWorks</a>
     </footer>
@@ -196,6 +207,50 @@
       window.location.href = "/login.html";
     });
 
+    const servicesList = document.getElementById("servicesList");
+    const serviceForm = document.getElementById("serviceForm");
+
+    async function loadServices() {
+      const res = await fetch("/api/dashboard/services");
+      const services = await res.json();
+      servicesList.innerHTML = "";
+
+      if (services.length === 0) {
+        servicesList.innerHTML = '<span style="font-size:0.82rem; color:var(--slate);">No services added yet.</span>';
+        return;
+      }
+
+      services.forEach((s) => {
+        const pill = document.createElement("span");
+        pill.style.cssText = "display:inline-flex; align-items:center; gap:6px; background:var(--cloud); border:1.5px solid #E5E7EB; border-radius:20px; padding:6px 10px 6px 12px; font-size:0.82rem;";
+        pill.innerHTML = `<span>${s.name}${s.price ? ` &middot; ${s.price}` : ""}</span>`;
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "×";
+        delBtn.style.cssText = "border:none; background:none; color:var(--red); font-size:1rem; cursor:pointer; line-height:1; padding:0;";
+        delBtn.addEventListener("click", async () => {
+          await fetch(`/api/dashboard/services/${s.id}`, { method: "DELETE" });
+          loadServices();
+        });
+        pill.appendChild(delBtn);
+        servicesList.appendChild(pill);
+      });
+    }
+
+    serviceForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("serviceName").value.trim();
+      const price = document.getElementById("servicePrice").value.trim();
+      if (!name) return;
+
+      await fetch("/api/dashboard/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, price })
+      });
+      serviceForm.reset();
+      loadServices();
+    });
+
     async function load() {
       const res = await fetch("/api/dashboard/bookings");
       if (res.status === 401) {
@@ -213,7 +268,7 @@
       bookings.forEach((b) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${b.customer_name}</td>
+          <td>${b.customer_name}${b.service_name ? `<br><span style="color:var(--orange); font-size:0.78rem; font-weight:600;">${b.service_name}</span>` : ""}</td>
           <td>${b.customer_phone}${b.customer_email ? `<br><span style="color:var(--slate); font-size:0.78rem;">${b.customer_email}</span>` : ""}</td>
           <td>${b.appointment_time}</td>
           <td><span class="pill pill-${b.status}">${b.status.replace(/_/g, " ")}</span></td>
@@ -265,7 +320,7 @@
     }
 
     document.getElementById("refresh").addEventListener("click", load);
-    checkAuth().then((ok) => { if (ok) load(); });
+    checkAuth().then((ok) => { if (ok) { load(); loadServices(); } });
   </script>
 </body>
 </html>

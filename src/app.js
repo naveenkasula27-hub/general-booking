@@ -102,7 +102,11 @@ app.get("/api/me", requireAuth, async (req, res) => {
 app.get("/api/:slug/info", async (req, res) => {
   const business = await Business.findOne({ slug: req.params.slug });
   if (!business) return res.status(404).json({ error: "No business found for that link" });
-  res.json({ business_name: business.business_name, slug: business.slug });
+  res.json({
+    business_name: business.business_name,
+    slug: business.slug,
+    services: business.services.map((s) => ({ id: s._id, name: s.name, price: s.price }))
+  });
 });
 
 // Lists bookable slots for a given date, marking which are already full.
@@ -137,7 +141,7 @@ app.post("/api/:slug/bookings", async (req, res) => {
     const business = await Business.findOne({ slug: req.params.slug });
     if (!business) return res.status(404).json({ error: "No business found for that link" });
 
-    const { customer_name, customer_phone, customer_email, appointment_date, appointment_slot } = req.body;
+    const { customer_name, customer_phone, customer_email, service_name, appointment_date, appointment_slot } = req.body;
     if (!customer_name || !customer_phone || !appointment_date || !appointment_slot) {
       return res.status(400).json({ error: "customer_name, customer_phone, appointment_date and appointment_slot are required" });
     }
@@ -157,7 +161,7 @@ app.post("/api/:slug/bookings", async (req, res) => {
     }
 
     const booking = await Booking.create({
-      business: business._id, customer_name, customer_phone, customer_email,
+      business: business._id, customer_name, customer_phone, customer_email, service_name,
       appointment_time, appointment_at
     });
     await notifyEngine("booking_confirmed", booking, business);
@@ -204,6 +208,33 @@ app.post("/api/:slug/bookings/:id/request-cancellation", async (req, res) => {
 });
 
 // ---------- Owner-only dashboard routes (login required) ----------
+
+app.get("/api/dashboard/services", requireAuth, async (req, res) => {
+  const business = await Business.findById(req.businessId);
+  if (!business) return res.status(401).json({ error: "Not logged in" });
+  res.json(business.services.map((s) => ({ id: s._id, name: s.name, price: s.price })));
+});
+
+app.post("/api/dashboard/services", requireAuth, async (req, res) => {
+  const { name, price } = req.body;
+  if (!name) return res.status(400).json({ error: "name is required" });
+
+  const business = await Business.findById(req.businessId);
+  if (!business) return res.status(401).json({ error: "Not logged in" });
+
+  business.services.push({ name, price: price || "" });
+  await business.save();
+  res.status(201).json(business.services.map((s) => ({ id: s._id, name: s.name, price: s.price })));
+});
+
+app.delete("/api/dashboard/services/:id", requireAuth, async (req, res) => {
+  const business = await Business.findById(req.businessId);
+  if (!business) return res.status(401).json({ error: "Not logged in" });
+
+  business.services = business.services.filter((s) => s._id.toString() !== req.params.id);
+  await business.save();
+  res.json(business.services.map((s) => ({ id: s._id, name: s.name, price: s.price })));
+});
 
 app.get("/api/dashboard/bookings", requireAuth, async (req, res) => {
   const bookings = await Booking.find({ business: req.businessId }).sort({ createdAt: -1 });

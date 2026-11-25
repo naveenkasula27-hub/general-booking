@@ -86,7 +86,7 @@
     color: var(--navy);
   }
   label:first-of-type { margin-top: 0; }
-  input {
+  input, select {
     width: 100%;
     padding: 12px 14px;
     margin-top: 6px;
@@ -100,7 +100,7 @@
     transition: border-color 0.15s ease;
   }
   input::placeholder { color: #B0B6C0; }
-  input:focus {
+  input:focus, select:focus {
     outline: none;
     border-color: var(--orange);
     background: var(--white);
@@ -212,6 +212,9 @@
         <label>WhatsApp number (with country code)
           <input type="tel" name="customer_phone" placeholder="91XXXXXXXXXX" required>
         </label>
+        <label id="serviceLabel" style="display:none;">Service
+          <select name="service_name" id="serviceSelect"></select>
+        </label>
         <label>Email (optional &mdash; we'll send a copy of your confirmation)
           <input type="email" name="customer_email" placeholder="you@example.com">
         </label>
@@ -258,6 +261,18 @@
       .then((biz) => {
         pageTitle.textContent = `Book with ${biz.business_name}`;
         pageSubtitle.textContent = "Pick a time. You'll get a WhatsApp confirmation right away.";
+
+        if (biz.services && biz.services.length > 0) {
+          const serviceLabel = document.getElementById("serviceLabel");
+          const serviceSelect = document.getElementById("serviceSelect");
+          biz.services.forEach((s) => {
+            const opt = document.createElement("option");
+            opt.value = s.name;
+            opt.textContent = s.price ? `${s.name} — ${s.price}` : s.name;
+            serviceSelect.appendChild(opt);
+          });
+          serviceLabel.style.display = "block";
+        }
       })
       .catch(() => {
         pageTitle.textContent = "Booking page not found";
