@@ -165,6 +165,23 @@
   @media (max-width: 720px) {
     table { display: block; overflow-x: auto; white-space: nowrap; }
   }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-tile {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 16px 14px;
+    box-shadow: 0 1px 3px rgba(20, 33, 61, 0.06);
+    text-align: center;
+  }
+  .stat-tile .num { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--orange); }
+  .stat-tile .label { font-size: 0.72rem; color: var(--slate); margin-top: 2px; }
+  .top-service-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 6px 0; border-bottom: 1px solid #F1F2F5; }
+  .top-service-row:last-child { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -175,6 +192,19 @@
       <div class="spacer"></div>
       <button id="refresh">Refresh</button>
       <button id="logout">Log out</button>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="table-card" style="margin-bottom:20px; padding:20px; display:flex; gap:24px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:200px;">
+        <h2 style="font-family:'Poppins',sans-serif; font-size:0.9rem; margin:0 0 8px;">By status</h2>
+        <div id="statusBreakdown"></div>
+      </div>
+      <div style="flex:1; min-width:200px;">
+        <h2 style="font-family:'Poppins',sans-serif; font-size:0.9rem; margin:0 0 8px;">Top services</h2>
+        <div id="topServices"></div>
+      </div>
     </div>
 
     <div class="table-card" style="margin-bottom:20px; padding:20px;">
@@ -235,6 +265,40 @@
       await fetch("/api/logout", { method: "POST" });
       window.location.href = "/login.html";
     });
+
+    // ---------- Analytics ----------
+    const statsGrid = document.getElementById("statsGrid");
+    const STATUS_LABELS = {
+      booking_confirmed: "Confirmed", appointment_reminder: "Reminded",
+      booking_completed: "Completed", booking_cancelled: "Cancelled", cancellation_requested: "Pending cancel"
+    };
+
+    async function loadAnalytics() {
+      const res = await fetch("/api/dashboard/analytics");
+      if (res.status === 401) { window.location.href = "/login.html"; return; }
+      const a = await res.json();
+
+      statsGrid.innerHTML = `
+        <div class="stat-tile"><div class="num">${a.total}</div><div class="label">All-time bookings</div></div>
+        <div class="stat-tile"><div class="num">${a.last_7_days}</div><div class="label">Last 7 days</div></div>
+        <div class="stat-tile"><div class="num">${a.last_30_days}</div><div class="label">Last 30 days</div></div>
+        <div class="stat-tile"><div class="num">${a.by_status.booking_cancelled || 0}</div><div class="label">Cancelled</div></div>
+      `;
+
+      const statusBreakdown = document.getElementById("statusBreakdown");
+      statusBreakdown.innerHTML = Object.entries(a.by_status).map(([key, count]) =>
+        `<div class="top-service-row"><span>${STATUS_LABELS[key] || key}</span><strong>${count}</strong></div>`
+      ).join("");
+
+      const topServices = document.getElementById("topServices");
+      if (a.top_services.length === 0) {
+        topServices.innerHTML = '<div style="font-size:0.82rem; color:var(--slate);">No service data yet.</div>';
+      } else {
+        topServices.innerHTML = a.top_services.map((s) =>
+          `<div class="top-service-row"><span>${s.name}</span><strong>${s.count}</strong></div>`
+        ).join("");
+      }
+    }
 
     // ---------- Day schedule ----------
     const dayDate = document.getElementById("dayDate");
@@ -396,7 +460,7 @@
     }
 
     document.getElementById("refresh").addEventListener("click", load);
-    checkAuth().then((ok) => { if (ok) { load(); loadServices(); loadDaySchedule(); } });
+    checkAuth().then((ok) => { if (ok) { load(); loadServices(); loadDaySchedule(); loadAnalytics(); } });
   </script>
 </body>
 </html>

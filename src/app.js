@@ -209,6 +209,39 @@ app.post("/api/:slug/bookings/:id/request-cancellation", async (req, res) => {
 
 // ---------- Owner-only dashboard routes (login required) ----------
 
+app.get("/api/dashboard/analytics", requireAuth, async (req, res) => {
+  const businessId = req.businessId;
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const statuses = ["booking_confirmed", "appointment_reminder", "booking_completed", "booking_cancelled", "cancellation_requested"];
+
+  const [total, last7Days, last30Days, byStatusCounts, topServices] = await Promise.all([
+    Booking.countDocuments({ business: businessId }),
+    Booking.countDocuments({ business: businessId, createdAt: { $gte: sevenDaysAgo } }),
+    Booking.countDocuments({ business: businessId, createdAt: { $gte: thirtyDaysAgo } }),
+    Promise.all(statuses.map((s) => Booking.countDocuments({ business: businessId, status: s }))),
+    Booking.aggregate([
+      { $match: { business: new mongoose.Types.ObjectId(businessId), service_name: { $nin: ["", null] } } },
+      { $group: { _id: "$service_name", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ])
+  ]);
+
+  const by_status = {};
+  statuses.forEach((s, i) => { by_status[s] = byStatusCounts[i]; });
+
+  res.json({
+    total,
+    last_7_days: last7Days,
+    last_30_days: last30Days,
+    by_status,
+    top_services: topServices.map((t) => ({ name: t._id, count: t.count }))
+  });
+});
+
 // Day schedule: every working-hour slot for that date, with whatever booking sits in it (if any).
 app.get("/api/dashboard/day-schedule", requireAuth, async (req, res) => {
   const business = await Business.findById(req.businessId);
