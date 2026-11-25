@@ -57,6 +57,19 @@
     cursor: pointer;
   }
   #refresh:hover { background: var(--navy); color: var(--white); }
+  #logout {
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1.5px solid #E5E7EB;
+    background: var(--white);
+    color: var(--slate);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  #logout:hover { border-color: var(--red); color: var(--red); }
+  .biz-name { color: var(--slate); font-weight: 400; }
   .table-card {
     background: var(--white);
     border-radius: 12px;
@@ -142,9 +155,10 @@
   <div class="page">
     <div class="topbar">
       <img src="/images/uww-logo-header.png" alt="UnityWebWorks">
-      <h1>&middot; Owner dashboard</h1>
+      <h1>&middot; Owner dashboard <span class="biz-name" id="bizName"></span></h1>
       <div class="spacer"></div>
       <button id="refresh">Refresh</button>
+      <button id="logout">Log out</button>
     </div>
 
     <div class="table-card">
@@ -164,9 +178,30 @@
   <script>
     const STATUSES = ["booking_confirmed", "appointment_reminder", "booking_completed", "booking_cancelled"];
     const rows = document.getElementById("rows");
+    const bizName = document.getElementById("bizName");
+
+    async function checkAuth() {
+      const res = await fetch("/api/me");
+      if (!res.ok) {
+        window.location.href = "/login.html";
+        return false;
+      }
+      const me = await res.json();
+      bizName.textContent = `(${me.business_name})`;
+      return true;
+    }
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      await fetch("/api/logout", { method: "POST" });
+      window.location.href = "/login.html";
+    });
 
     async function load() {
-      const res = await fetch("/api/bookings");
+      const res = await fetch("/api/dashboard/bookings");
+      if (res.status === 401) {
+        window.location.href = "/login.html";
+        return;
+      }
       const bookings = await res.json();
       rows.innerHTML = "";
 
@@ -190,7 +225,7 @@
           approveBtn.className = "approve-btn";
           approveBtn.textContent = "Approve";
           approveBtn.addEventListener("click", async () => {
-            await fetch(`/api/bookings/${b._id}/approve-cancellation`, { method: "PATCH" });
+            await fetch(`/api/dashboard/bookings/${b._id}/approve-cancellation`, { method: "PATCH" });
             load();
           });
 
@@ -198,7 +233,7 @@
           rejectBtn.className = "reject-btn";
           rejectBtn.textContent = "Keep booking";
           rejectBtn.addEventListener("click", async () => {
-            await fetch(`/api/bookings/${b._id}/reject-cancellation`, { method: "PATCH" });
+            await fetch(`/api/dashboard/bookings/${b._id}/reject-cancellation`, { method: "PATCH" });
             load();
           });
 
@@ -214,7 +249,7 @@
             select.appendChild(opt);
           });
           select.addEventListener("change", async () => {
-            await fetch(`/api/bookings/${b._id}/status`, {
+            await fetch(`/api/dashboard/bookings/${b._id}/status`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ status: select.value })
@@ -230,7 +265,7 @@
     }
 
     document.getElementById("refresh").addEventListener("click", load);
-    load();
+    checkAuth().then((ok) => { if (ok) load(); });
   </script>
 </body>
 </html>

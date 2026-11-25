@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owner login | UnityWebWorks</title>
+<link rel="icon" href="/images/uww-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #14213D; --orange: #FF6A1F; --slate: #6B7280;
+    --pale-orange: #FFE4D1; --cloud: #F8F8F8; --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    background: var(--cloud);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+  .page { max-width: 420px; margin: 0 auto; padding: 48px 20px 60px; }
+  .brand { display: flex; justify-content: center; margin-bottom: 28px; }
+  .brand img { height: 26px; width: auto; }
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px 24px;
+    box-shadow: 0 1px 3px rgba(20, 33, 61, 0.08), 0 8px 24px rgba(20, 33, 61, 0.06);
+  }
+  h1 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.25rem; margin: 0 0 4px; text-align: center; }
+  .subtitle { font-size: 0.85rem; color: var(--slate); margin: 0 0 20px; text-align: center; }
+  label { display: block; margin-top: 16px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.82rem; }
+  label:first-of-type { margin-top: 0; }
+  input {
+    width: 100%; padding: 12px 14px; margin-top: 6px; border: 1.5px solid #E5E7EB;
+    border-radius: 8px; font-family: 'Lato', sans-serif; font-size: 0.95rem;
+    color: var(--navy); background: var(--cloud);
+  }
+  input:focus { outline: none; border-color: var(--orange); background: var(--white); }
+  button {
+    margin-top: 22px; width: 100%; padding: 13px; background: var(--orange); color: var(--navy);
+    border: none; border-radius: 8px; font-family: 'Poppins', sans-serif; font-weight: 600;
+    font-size: 0.95rem; cursor: pointer;
+  }
+  button:hover { background: #E85E19; }
+  #msg { margin-top: 14px; font-size: 0.85rem; font-weight: 600; text-align: center; color: #B23E06; }
+  .bottom-link { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--slate); }
+  .bottom-link a { color: var(--orange); font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="brand"><img src="/images/uww-logo-header.png" alt="UnityWebWorks"></div>
+    <div class="card">
+      <h1>Owner login</h1>
+      <p class="subtitle">Sign in to manage your bookings.</p>
+      <form id="loginForm">
+        <label>Email
+          <input type="email" name="owner_email" required>
+        </label>
+        <label>Password
+          <input type="password" name="password" required>
+        </label>
+        <button type="submit">Log in</button>
+      </form>
+      <div id="msg"></div>
+      <div class="bottom-link">New here? <a href="/signup.html">Create your booking page</a></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      msg.textContent = "";
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || "Could not log in");
+        window.location.href = "/dashboard";
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -177,8 +177,8 @@
     </div>
 
     <div class="card">
-      <h1>Book your appointment</h1>
-      <p class="subtitle">Pick a time. You'll get a WhatsApp confirmation right away.</p>
+      <h1 id="pageTitle">Book your appointment</h1>
+      <p class="subtitle" id="pageSubtitle">Pick a time. You'll get a WhatsApp confirmation right away.</p>
       <form id="bookingForm">
         <label>Your name
           <input type="text" name="customer_name" required>
@@ -210,6 +210,28 @@
   </div>
 
   <script>
+    // The slug is the first path segment: /salon-x/book -> "salon-x"
+    const slug = window.location.pathname.split("/").filter(Boolean)[0] || "demo";
+
+    const pageTitle = document.getElementById("pageTitle");
+    const pageSubtitle = document.getElementById("pageSubtitle");
+
+    fetch(`/api/${encodeURIComponent(slug)}/info`)
+      .then((res) => {
+        if (!res.ok) throw new Error("not found");
+        return res.json();
+      })
+      .then((biz) => {
+        pageTitle.textContent = `Book with ${biz.business_name}`;
+        pageSubtitle.textContent = "Pick a time. You'll get a WhatsApp confirmation right away.";
+      })
+      .catch(() => {
+        pageTitle.textContent = "Booking page not found";
+        pageSubtitle.textContent = "This link doesn't match a business. Check the URL and try again.";
+        document.getElementById("bookingForm").style.display = "none";
+        document.getElementById("findBtn").style.display = "none";
+      });
+
     const form = document.getElementById("bookingForm");
     const msg = document.getElementById("msg");
 
@@ -219,7 +241,7 @@
       msg.textContent = "Booking...";
 
       try {
-        const res = await fetch("/api/bookings", {
+        const res = await fetch(`/api/${encodeURIComponent(slug)}/bookings`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
@@ -241,7 +263,7 @@
       if (!phone) return;
       lookupResults.innerHTML = '<div class="result-row">Looking up...</div>';
 
-      const res = await fetch(`/api/bookings/by-phone/${encodeURIComponent(phone)}`);
+      const res = await fetch(`/api/${encodeURIComponent(slug)}/bookings/by-phone/${encodeURIComponent(phone)}`);
       const bookings = await res.json();
       lookupResults.innerHTML = "";
 
@@ -266,7 +288,7 @@
         cancelBtn.addEventListener("click", async () => {
           cancelBtn.disabled = true;
           cancelBtn.textContent = "Requesting...";
-          await fetch(`/api/bookings/${b._id}/request-cancellation`, { method: "POST" });
+          await fetch(`/api/${encodeURIComponent(slug)}/bookings/${b._id}/request-cancellation`, { method: "POST" });
           findBtn.click();
         });
         row.appendChild(cancelBtn);

@@ -1,7 +1,7 @@
 // Single place that talks to the UnityWebWorks automation engine (n8n).
 // Every WhatsApp/email alert for this product goes through here.
 
-export async function notifyEngine(eventType, booking) {
+export async function notifyEngine(eventType, booking, business) {
   const url = process.env.ENGINE_WEBHOOK_URL;
   if (!url) {
     console.warn("ENGINE_WEBHOOK_URL not set — skipping engine notification");
@@ -11,12 +11,12 @@ export async function notifyEngine(eventType, booking) {
   const payload = {
     business_type: "general",
     event_type: eventType,
-    business_name: process.env.BUSINESS_NAME,
+    business_name: business?.business_name || process.env.BUSINESS_NAME,
     customer_name: booking.customer_name,
     customer_phone: booking.customer_phone,
     appointment_time: booking.appointment_time,
-    owner_email: process.env.OWNER_EMAIL || undefined,
-    owner_phone: process.env.OWNER_PHONE || undefined
+    owner_email: business?.owner_email || process.env.OWNER_EMAIL || undefined,
+    owner_phone: business?.owner_phone || process.env.OWNER_PHONE || undefined
   };
 
   try {
