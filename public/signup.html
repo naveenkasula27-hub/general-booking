@@ -34,12 +34,12 @@
   .subtitle { font-size: 0.85rem; color: var(--slate); margin: 0 0 20px; text-align: center; }
   label { display: block; margin-top: 16px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.82rem; }
   label:first-of-type { margin-top: 0; }
-  input {
+  input, select {
     width: 100%; padding: 12px 14px; margin-top: 6px; border: 1.5px solid #E5E7EB;
     border-radius: 8px; font-family: 'Lato', sans-serif; font-size: 0.95rem;
-    color: var(--navy); background: var(--cloud);
+    color: var(--navy); background: var(--cloud); box-sizing: border-box;
   }
-  input:focus { outline: none; border-color: var(--orange); background: var(--white); }
+  input:focus, select:focus { outline: none; border-color: var(--orange); background: var(--white); }
   .slug-preview { margin-top: 6px; font-size: 0.78rem; color: var(--slate); }
   .slug-preview strong { color: var(--orange); }
   button {
@@ -73,6 +73,27 @@
         <label>Your WhatsApp number (with country code)
           <input type="tel" name="owner_phone" placeholder="91XXXXXXXXXX">
         </label>
+        <div style="display:flex; gap:10px;">
+          <label style="flex:1;">Opens at
+            <input type="time" name="working_hours_start" value="09:00" required>
+          </label>
+          <label style="flex:1;">Closes at
+            <input type="time" name="working_hours_end" value="18:00" required>
+          </label>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <label style="flex:1;">Slot length
+            <select name="slot_duration_minutes">
+              <option value="15">15 min</option>
+              <option value="30" selected>30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+            </select>
+          </label>
+          <label style="flex:1;">Bookings per slot
+            <input type="number" name="slot_capacity" value="1" min="1" max="50" required>
+          </label>
+        </div>
         <label>Password
           <input type="password" name="password" required minlength="6">
         </label>

@@ -1,0 +1,21 @@
+services:
+  general-booking:
+    build: .
+    restart: always
+    networks:
+      - n8n_default
+    environment:
+      - TZ=Asia/Kolkata
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.general-booking.rule=Host(`booking.unitywebworks.com`)
+      - traefik.http.routers.general-booking.tls=true
+      - traefik.http.routers.general-booking.entrypoints=web,websecure
+      - traefik.http.routers.general-booking.tls.certresolver=mytlschallenge
+      - traefik.http.services.general-booking.loadbalancer.server.port=8001
+    env_file:
+      - .env
+
+networks:
+  n8n_default:
+    external: true

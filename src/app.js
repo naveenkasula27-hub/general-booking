@@ -9,6 +9,7 @@ import Booking from "./Booking.js";
 import Business from "./Business.js";
 import { notifyEngine } from "./engine.js";
 import { hashPassword, comparePassword, signBusinessToken, setSessionCookie, clearSessionCookie, requireAuth } from "./auth.js";
+import { generateSlotsForDate, combineDateTime, formatDisplayTime } from "./slots.js";
 
 // This sandbox doesn't hand Node's resolver the system DNS servers it needs
 // for mongodb+srv:// SRV lookups, even though the OS resolver works fine.
@@ -25,7 +26,7 @@ app.use(cookieParser());
 
 app.post("/api/signup", async (req, res) => {
   try {
-    const { business_name, slug, owner_email, owner_phone, password } = req.body;
+    const { business_name, slug, owner_email, owner_phone, password, working_hours_start, working_hours_end, slot_duration_minutes, slot_capacity } = req.body;
     if (!business_name || !slug || !owner_email || !password) {
       return res.status(400).json({ error: "business_name, slug, owner_email and password are required" });
     }
@@ -43,7 +44,13 @@ app.post("/api/signup", async (req, res) => {
     if (existingEmail) return res.status(409).json({ error: "An account with that email already exists" });
 
     const password_hash = await hashPassword(password);
-    const business = await Business.create({ business_name, slug, owner_email, owner_phone, password_hash });
+    const business = await Business.create({
+      business_name, slug, owner_email, owner_phone, password_hash,
+      working_hours_start: working_hours_start || "09:00",
+      working_hours_end: working_hours_end || "18:00",
+      slot_duration_minutes: Number(slot_duration_minutes) || 30,
+      slot_capacity: Number(slot_capacity) || 1
+    });
 
     const token = signBusinessToken(business);
     setSessionCookie(res, token);
@@ -97,17 +104,61 @@ app.get("/api/:slug/info", async (req, res) => {
   res.json({ business_name: business.business_name, slug: business.slug });
 });
 
+// Lists bookable slots for a given date, marking which are already full.
+app.get("/api/:slug/available-slots", async (req, res) => {
+  const business = await Business.findOne({ slug: req.params.slug });
+  if (!business) return res.status(404).json({ error: "No business found for that link" });
+
+  const { date } = req.query;
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ error: "date is required, format YYYY-MM-DD" });
+  }
+
+  const slots = generateSlotsForDate(business, date);
+  const capacity = business.slot_capacity || 1;
+
+  const results = await Promise.all(slots.map(async (slot) => {
+    if (slot.isPast) return { ...slot, full: true };
+    const at = combineDateTime(date, slot.time);
+    const count = await Booking.countDocuments({
+      business: business._id,
+      appointment_at: at,
+      status: { $ne: "booking_cancelled" }
+    });
+    return { ...slot, full: count >= capacity };
+  }));
+
+  res.json(results);
+});
+
 app.post("/api/:slug/bookings", async (req, res) => {
   try {
     const business = await Business.findOne({ slug: req.params.slug });
     if (!business) return res.status(404).json({ error: "No business found for that link" });
 
-    const { customer_name, customer_phone, customer_email, appointment_time } = req.body;
-    if (!customer_name || !customer_phone || !appointment_time) {
-      return res.status(400).json({ error: "customer_name, customer_phone and appointment_time are required" });
+    const { customer_name, customer_phone, customer_email, appointment_date, appointment_slot } = req.body;
+    if (!customer_name || !customer_phone || !appointment_date || !appointment_slot) {
+      return res.status(400).json({ error: "customer_name, customer_phone, appointment_date and appointment_slot are required" });
     }
 
-    const booking = await Booking.create({ business: business._id, customer_name, customer_phone, customer_email, appointment_time });
+    const appointment_at = combineDateTime(appointment_date, appointment_slot);
+    const appointment_time = formatDisplayTime(appointment_at);
+
+    // Re-check capacity server-side (the slots list the customer saw may be stale)
+    const capacity = business.slot_capacity || 1;
+    const existingCount = await Booking.countDocuments({
+      business: business._id,
+      appointment_at,
+      status: { $ne: "booking_cancelled" }
+    });
+    if (existingCount >= capacity) {
+      return res.status(409).json({ error: "That time slot just got booked by someone else — please pick another." });
+    }
+
+    const booking = await Booking.create({
+      business: business._id, customer_name, customer_phone, customer_email,
+      appointment_time, appointment_at
+    });
     await notifyEngine("booking_confirmed", booking, business);
 
     res.status(201).json(booking);

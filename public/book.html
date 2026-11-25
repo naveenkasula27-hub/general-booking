@@ -160,6 +160,32 @@
     color: #B23E06;
   }
   .result-row button:hover { background: #FFD4B3; }
+  .slots-box {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--slate);
+  }
+  .slot-btn {
+    margin: 0;
+    width: auto;
+    padding: 9px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: var(--cloud);
+    color: var(--navy);
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+  }
+  .slot-btn:hover { background: var(--pale-orange); border-color: var(--orange); }
+  .slot-btn.selected { background: var(--orange); color: var(--navy); border-color: var(--orange); }
+  .slot-btn.full {
+    background: #F1F2F5; color: #B0B6C0; border-color: #EEF0F3;
+    cursor: not-allowed; text-decoration: line-through;
+  }
+  .slot-btn.full:hover { background: #F1F2F5; border-color: #EEF0F3; }
   footer {
     text-align: center;
     margin-top: 32px;
@@ -189,10 +215,15 @@
         <label>Email (optional &mdash; we'll send a copy of your confirmation)
           <input type="email" name="customer_email" placeholder="you@example.com">
         </label>
-        <label>Preferred time
-          <input type="text" name="appointment_time" placeholder="e.g. Tomorrow 5 PM" required>
+        <label>Date
+          <input type="date" id="dateInput" required>
         </label>
-        <button type="submit">Book now</button>
+        <label>Available times
+          <div id="slotsBox" class="slots-box">Pick a date first.</div>
+        </label>
+        <input type="hidden" name="appointment_date" id="appointmentDate">
+        <input type="hidden" name="appointment_slot" id="appointmentSlot">
+        <button type="submit" id="bookBtn" disabled>Book now</button>
       </form>
       <div id="msg"></div>
     </div>
@@ -237,9 +268,63 @@
 
     const form = document.getElementById("bookingForm");
     const msg = document.getElementById("msg");
+    const dateInput = document.getElementById("dateInput");
+    const slotsBox = document.getElementById("slotsBox");
+    const appointmentDate = document.getElementById("appointmentDate");
+    const appointmentSlot = document.getElementById("appointmentSlot");
+    const bookBtn = document.getElementById("bookBtn");
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    dateInput.min = todayStr;
+    dateInput.value = todayStr;
+
+    async function loadSlots() {
+      appointmentSlot.value = "";
+      bookBtn.disabled = true;
+      const date = dateInput.value;
+      if (!date) return;
+
+      appointmentDate.value = date;
+      slotsBox.textContent = "Loading times...";
+
+      const res = await fetch(`/api/${encodeURIComponent(slug)}/available-slots?date=${encodeURIComponent(date)}`);
+      const slots = await res.json();
+      slotsBox.innerHTML = "";
+
+      if (!Array.isArray(slots) || slots.length === 0) {
+        slotsBox.textContent = "No time slots configured for this business.";
+        return;
+      }
+      if (slots.every((s) => s.full)) {
+        slotsBox.textContent = "No times left on this date — try another day.";
+        return;
+      }
+
+      slots.forEach((slot) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "slot-btn" + (slot.full ? " full" : "");
+        btn.textContent = slot.time12;
+        btn.disabled = slot.full;
+        btn.addEventListener("click", () => {
+          slotsBox.querySelectorAll(".slot-btn").forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          appointmentSlot.value = slot.time;
+          bookBtn.disabled = false;
+        });
+        slotsBox.appendChild(btn);
+      });
+    }
+
+    dateInput.addEventListener("change", loadSlots);
+    loadSlots();
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (!appointmentSlot.value) {
+        msg.textContent = "Please pick a time slot.";
+        return;
+      }
       const data = Object.fromEntries(new FormData(form).entries());
       msg.textContent = "Booking...";
 
@@ -252,6 +337,8 @@
         if (!res.ok) throw new Error((await res.json()).error || "Failed");
         msg.textContent = "Booked! You'll get a WhatsApp confirmation shortly.";
         form.reset();
+        dateInput.value = todayStr;
+        loadSlots();
       } catch (err) {
         msg.textContent = "Could not book: " + err.message;
       }
